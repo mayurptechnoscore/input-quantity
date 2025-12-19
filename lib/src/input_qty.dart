@@ -5,9 +5,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:input_quantity/src/floating_point.dart';
 import 'package:input_quantity/src/constant.dart';
 import 'package:input_quantity/src/decoration_props.dart';
+import 'package:input_quantity/src/floating_point.dart';
 import 'package:input_quantity/src/form_props.dart';
 
 import 'build_btn.dart';
@@ -527,7 +527,8 @@ class _InputQtyState extends State<InputQty> {
         enabled: widget.qtyFormProps.enabled,
         showCursor: widget.qtyFormProps.showCursor,
         inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'^-?\d*\.?\d*'))
+          FilteringTextInputFormatter.allow(RegExp(r'^-?\d*\.?\d*')),
+          RangeFormatter(min: widget.minVal, max: widget.maxVal),
         ],
         onChanged: (String strVal) {
           if (widget._outputType == _OutputType.integer &&
@@ -574,5 +575,29 @@ class _InputQtyState extends State<InputQty> {
     _valCtrl.dispose();
     currentval.dispose();
     super.dispose();
+  }
+}
+
+class RangeFormatter extends TextInputFormatter {
+  final num min;
+  final num max;
+
+  RangeFormatter({required this.min, required this.max});
+
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) {
+      return newValue;
+    }
+
+    final value = num.tryParse(newValue.text);
+    if (value == null) return oldValue;
+
+    if (value < min || value > max) {
+      return oldValue; // Reject out-of-range numbers
+    }
+
+    return newValue;
   }
 }
